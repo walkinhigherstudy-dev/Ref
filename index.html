@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Referral Tracker Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange:#FF6B00; --orange-dark:#D95800; --orange-light:#FF9640;
+  --orange-pale:#FFF3EB; --orange-mid:#FFD0AD;
+  --off-white:#FFF8F3;
+  --g100:#F6F6F6; --g400:#A0A0A0; --g600:#5A5A5A; --g900:#1A1A1A;
+  --green:#1A8C4E; --green-bg:#E8F7EF;
+  --amber:#C97D00; --amber-bg:#FFF4E0;
+  --red:#C82828;   --red-bg:#FEE8E8;
+  --blue:#2B5EC9;  --blue-bg:#E8EFFE;
+  --r:14px; --rs:8px;
+  --sh:0 2px 12px rgba(255,107,0,.09);
+  --shm:0 6px 24px rgba(255,107,0,.16);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sora',sans-serif;background:var(--off-white);color:var(--g900);min-height:100vh}
+
+header{
+  background:linear-gradient(120deg,var(--orange) 0%,var(--orange-dark) 100%);
+  padding:0 32px;height:66px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:200;box-shadow:0 4px 20px rgba(224,88,0,.35);
+}
+.logo{display:flex;align-items:center;gap:12px;color:#fff}
+.logo-box{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:20px}
+.logo h1{font-size:17px;font-weight:800;letter-spacing:-.3px}
+.logo small{font-size:11px;opacity:.75;font-weight:400;display:block;margin-top:1px}
+.hdr-right{display:flex;align-items:center;gap:14px}
+.ts{color:rgba(255,255,255,.7);font-family:'DM Mono',monospace;font-size:11px}
+.btn-refresh{background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.35);color:#fff;padding:7px 16px;border-radius:var(--rs);font-family:'Sora',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.2s}
+.btn-refresh:hover{background:rgba(255,255,255,.28)}
+#spin{display:inline-block}
+.spinning{animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+main{padding:26px 32px;max-width:1560px;margin:0 auto}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
+.kcard{background:#fff;border-radius:var(--r);padding:18px 20px;border:1.5px solid var(--orange-mid);box-shadow:var(--sh);position:relative;overflow:hidden;transition:.2s}
+.kcard:hover{transform:translateY(-2px);box-shadow:var(--shm)}
+.kcard::after{content:'';position:absolute;top:0;left:0;right:0;height:3.5px;background:linear-gradient(90deg,var(--orange),var(--orange-light))}
+.kcard .ico{width:38px;height:38px;border-radius:9px;background:var(--orange-pale);display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:11px}
+.kcard .val{font-size:28px;font-weight:800;color:var(--orange);line-height:1;margin-bottom:3px}
+.kcard .lbl{font-size:11px;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.kcard .sub{font-size:11px;color:var(--g600);margin-top:3px}
+
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.chart-card{background:#fff;border-radius:var(--r);padding:20px;border:1.5px solid var(--orange-mid);box-shadow:var(--sh)}
+.chart-card h3{font-size:12px;font-weight:700;color:var(--g600);text-transform:uppercase;letter-spacing:.6px;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.chart-card h3::before{content:'';width:3px;height:14px;background:var(--orange);border-radius:2px;display:block}
+
+.donut-wrap{display:flex;align-items:center;gap:22px}
+.legend{display:flex;flex-direction:column;gap:9px;flex:1}
+.l-item{display:flex;align-items:center;gap:8px;font-size:12px}
+.l-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.l-name{color:var(--g600);font-weight:500;flex:1}
+.l-cnt{font-weight:800;color:var(--g900);font-family:'DM Mono',monospace;font-size:12px}
+.l-pct{color:var(--g400);font-size:11px;margin-left:2px}
+
+.bar-list{display:flex;flex-direction:column;gap:9px}
+.b-row{display:flex;align-items:center;gap:10px}
+.b-lbl{min-width:130px;font-size:11px;font-weight:600;color:var(--g600);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b-track{flex:1;height:20px;background:var(--orange-pale);border-radius:4px;overflow:hidden}
+.b-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange-light));border-radius:4px;display:flex;align-items:center;padding:0 8px;min-width:28px;transition:width .7s ease}
+.b-fill span{color:#fff;font-size:11px;font-weight:700;font-family:'DM Mono',monospace}
+
+.filter-bar{background:#fff;border-radius:var(--r);padding:16px 20px;border:1.5px solid var(--orange-mid);box-shadow:var(--sh);margin-bottom:18px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:5px;min-width:150px}
+.fg label{font-size:10px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.6px}
+.fg select,.fg input{border:1.5px solid var(--orange-mid);border-radius:var(--rs);padding:8px 11px;font-family:'Sora',sans-serif;font-size:12px;color:var(--g900);background:var(--off-white);outline:none;transition:.2s;cursor:pointer}
+.fg select:focus,.fg input:focus{border-color:var(--orange);background:#fff}
+.fbtns{display:flex;gap:8px;align-items:flex-end}
+.btn-apply{background:linear-gradient(135deg,var(--orange),var(--orange-dark));color:#fff;border:none;padding:9px 18px;border-radius:var(--rs);font-family:'Sora',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px}
+.btn-apply:hover{box-shadow:0 4px 14px rgba(255,107,0,.4);transform:translateY(-1px)}
+.btn-reset{background:#fff;color:var(--orange);border:1.5px solid var(--orange-mid);padding:9px 14px;border-radius:var(--rs);font-family:'Sora',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:.2s}
+.btn-reset:hover{border-color:var(--orange);background:var(--orange-pale)}
+
+.table-wrap-outer{background:#fff;border-radius:var(--r);border:1.5px solid var(--orange-mid);box-shadow:var(--sh);overflow:hidden}
+.tbl-hdr{padding:14px 20px;border-bottom:2px solid var(--orange-pale);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to right,var(--orange-pale),#fff)}
+.tbl-hdr h2{font-size:14px;font-weight:800;color:var(--g900);display:flex;align-items:center;gap:8px}
+.tbl-hdr h2 em{color:var(--orange);font-style:normal;font-size:12px}
+.rec-badge{background:var(--orange-pale);color:var(--orange);font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;border:1px solid var(--orange-mid)}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead tr{background:linear-gradient(to right,var(--orange),var(--orange-dark))}
+thead th{padding:11px 13px;text-align:left;font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.7px;white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--orange-pale);transition:.12s}
+tbody tr:hover{background:var(--orange-pale)}
+tbody td{padding:10px 13px;color:var(--g600);vertical-align:middle;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.nm{font-weight:700;color:var(--g900)}
+td.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--g400)}
+
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.bd{width:5px;height:5px;border-radius:50%}
+.b-sel{background:var(--green-bg);color:var(--green)}.b-sel .bd{background:var(--green)}
+.b-hld{background:var(--amber-bg);color:var(--amber)}.b-hld .bd{background:var(--amber)}
+.b-rej{background:var(--red-bg);color:var(--red)}.b-rej .bd{background:var(--red)}
+.b-pnd{background:var(--blue-bg);color:var(--blue)}.b-pnd .bd{background:var(--blue)}
+.b-def{background:var(--g100);color:var(--g400)}.b-def .bd{background:var(--g400)}
+
+.ey{color:var(--green);font-weight:800;font-size:12px}
+.en{color:var(--g400);font-size:12px}
+.rev{font-family:'DM Mono',monospace;font-weight:700;color:var(--orange-dark);font-size:12px}
+.res-link{color:var(--orange);font-size:11px;font-weight:700;text-decoration:none}
+.res-link:hover{text-decoration:underline}
+.dash{color:var(--g400)}
+
+.pager{display:flex;align-items:center;justify-content:space-between;padding:11px 20px;border-top:1px solid var(--orange-pale);background:var(--off-white)}
+.pager-info{font-size:11px;color:var(--g400)}
+.pager-btns{display:flex;gap:5px}
+.pb{width:30px;height:30px;border:1.5px solid var(--orange-mid);border-radius:6px;background:#fff;color:var(--g600);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;font-family:'Sora',sans-serif}
+.pb:hover{border-color:var(--orange);color:var(--orange)}
+.pb.on{background:var(--orange);color:#fff;border-color:var(--orange)}
+.pb:disabled{opacity:.35;cursor:not-allowed}
+
+.sbox{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:52px 20px;gap:12px}
+.sbox .emo{font-size:36px}
+.sbox p{color:var(--g400);font-size:13px}
+.spin-ring{width:34px;height:34px;border:3px solid var(--orange-pale);border-top-color:var(--orange);border-radius:50%;animation:rot .75s linear infinite}
+
+.toast{position:fixed;bottom:22px;right:22px;background:var(--g900);color:#fff;padding:11px 18px;border-radius:10px;font-size:12px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.22);border-left:4px solid var(--orange);transform:translateY(80px);opacity:0;transition:.3s;z-index:999}
+.toast.show{transform:translateY(0);opacity:1}
+
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.charts-row{grid-template-columns:1fr}main{padding:14px}header{padding:0 14px}}
+@media(max-width:600px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-box">👥</div>
+    <div>
+      <h1>Referral Tracker Portal</h1>
+      <small>Live · Google Sheets Integration</small>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <span class="ts" id="tsLabel">—</span>
+    <button class="btn-refresh" onclick="loadData()">
+      <span id="spin">↻</span> Refresh
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="kpi-grid">
+    <div class="kcard"><div class="ico">📋</div><div class="val" id="k0">—</div><div class="lbl">Total Referrals</div></div>
+    <div class="kcard"><div class="ico">✅</div><div class="val" id="k1">—</div><div class="lbl">Selected</div></div>
+    <div class="kcard"><div class="ico">⏸️</div><div class="val" id="k2">—</div><div class="lbl">On Hold</div></div>
+    <div class="kcard"><div class="ico">⭐</div><div class="val" id="k3">—</div><div class="lbl">Eligible</div><div class="sub">for bonus</div></div>
+    <div class="kcard"><div class="ico">💰</div><div class="val" id="k4">—</div><div class="lbl">Total Revenue</div></div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3>Status Breakdown</h3>
+      <div class="donut-wrap">
+        <svg id="donut" width="120" height="120" viewBox="0 0 120 120" style="flex-shrink:0"></svg>
+        <div class="legend" id="legend"><div class="sbox" style="padding:10px"><div class="spin-ring"></div></div></div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Top Positions Referred</h3>
+      <div class="bar-list" id="bars"><div class="sbox" style="padding:10px"><div class="spin-ring"></div></div></div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="fg" style="min-width:210px">
+      <label>🔍 Search</label>
+      <input type="text" id="fSearch" placeholder="Name, email, position…">
+    </div>
+    <div class="fg">
+      <label>Status</label>
+      <select id="fStatus">
+        <option value="">All Statuses</option>
+        <option>Selected</option><option>On Hold</option><option>Rejected</option><option>Pending</option>
+      </select>
+    </div>
+    <div class="fg"><label>Position</label><select id="fPos"><option value="">All Positions</option></select></div>
+    <div class="fg"><label>Employee</label><select id="fEmp"><option value="">All Employees</option></select></div>
+    <div class="fg">
+      <label>Eligible</label>
+      <select id="fElig"><option value="">All</option><option>Yes</option><option>No</option></select>
+    </div>
+    <div class="fbtns">
+      <button class="btn-apply" onclick="applyF()">⚡ Apply</button>
+      <button class="btn-reset" onclick="resetF()">✕ Reset</button>
+    </div>
+  </div>
+
+  <div class="table-wrap-outer">
+    <div class="tbl-hdr">
+      <h2>📌 Referral Records &nbsp;<em id="filterNote"></em></h2>
+      <div class="rec-badge" id="recBadge">0 records</div>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Date</th><th>Employee</th><th>Candidate</th>
+            <th>Contact</th><th>Email</th><th>Position</th><th>Status</th>
+            <th>Eligible</th><th>Joining Date</th><th>Revenue (₹)</th><th>Resume</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="12"><div class="sbox"><div class="spin-ring"></div><p>Connecting to Google Sheets…</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <div class="pager-info" id="pgInfo">—</div>
+      <div class="pager-btns" id="pgBtns"></div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SHEET_ID = '1M5pP9WhJyj6YJAsfmNtiWaU-3TgvmsIzF9VAIsxrBgA';
+const GID      = '1838078418';
+const CSV_BASE = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}&t=`;
+
+const PAGE_SZ = 15;
+let ALL=[], FILTERED=[], pg=1;
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+function parseCSV(txt){
+  return txt.split('\n').filter(l=>l.trim()).map(line=>{
+    const cols=[]; let cur='',q=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){q=!q}
+      else if(c===','&&!q){cols.push(cur.trim());cur='';}
+      else cur+=c;
+    }
+    cols.push(cur.trim()); return cols;
+  });
+}
+
+async function loadData(){
+  const sp=document.getElementById('spin');
+  sp.classList.add('spinning');
+  document.getElementById('tbody').innerHTML=
+    `<tr><td colspan="12"><div class="sbox"><div class="spin-ring"></div><p>Fetching latest data…</p></div></td></tr>`;
+
+  try{
+    const res = await fetch(CSV_BASE + Date.now(), {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const txt = await res.text();
+    const rows = parseCSV(txt);
+
+    // Skip header row (index 0)
+    ALL = rows.slice(1)
+      .map((r,i)=>({
+        i:       i+1,
+        ts:      r[0]  || '',
+        emp:     r[1]  || '',
+        cand:    r[2]  || '',
+        ph:      r[3]  || '',
+        pos:     r[4]  || '',
+        resume:  r[5]  || '',
+        mail:    r[6]  || '',
+        empId:   r[7]  || '',
+        stat:    (r[10]||'').replace(/[\u200B-\u200D\uFEFF]/g,'').trim(),
+        jd:      r[11] || '',
+        elig:    (r[12]||'').trim(),
+        rev:     r[13] || '0',
+      }))
+      .filter(r => r.cand.trim() || r.emp.trim());
+
+    document.getElementById('tsLabel').textContent =
+      'Updated ' + new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+
+    buildDropdowns();
+    FILTERED=[...ALL]; pg=1;
+    render();
+    toast(`✅ ${ALL.length} record${ALL.length!==1?'s':''} loaded`);
+  } catch(err){
+    document.getElementById('tbody').innerHTML=`
+      <tr><td colspan="12"><div class="sbox">
+        <span class="emo">⚠️</span>
+        <p>${err.message === 'Failed to fetch'
+            ? 'CORS blocked. Open this file via a local server or GitHub Pages.'
+            : 'Could not load data: ' + err.message}</p>
+        <button class="btn-apply" onclick="loadData()" style="margin-top:10px">↻ Retry</button>
+      </div></td></tr>`;
+    toast('❌ ' + err.message);
+  }
+  sp.classList.remove('spinning');
+}
+
+function buildDropdowns(){
+  const pos=[...new Set(ALL.map(r=>r.pos).filter(Boolean))].sort();
+  const emp=[...new Set(ALL.map(r=>r.emp).filter(Boolean))].sort();
+  document.getElementById('fPos').innerHTML=
+    '<option value="">All Positions</option>'+pos.map(p=>`<option>${p}</option>`).join('');
+  document.getElementById('fEmp').innerHTML=
+    '<option value="">All Employees</option>'+emp.map(e=>`<option>${e}</option>`).join('');
+}
+
+function applyF(){
+  const s  = document.getElementById('fSearch').value.toLowerCase();
+  const st = document.getElementById('fStatus').value;
+  const po = document.getElementById('fPos').value;
+  const em = document.getElementById('fEmp').value;
+  const el = document.getElementById('fElig').value;
+  FILTERED = ALL.filter(r=>{
+    if(s && ![r.cand,r.emp,r.mail,r.pos].some(v=>v.toLowerCase().includes(s))) return false;
+    if(st && r.stat!==st) return false;
+    if(po && r.pos!==po)  return false;
+    if(em && r.emp!==em)  return false;
+    if(el && r.elig!==el) return false;
+    return true;
+  });
+  pg=1; render();
+}
+
+function resetF(){
+  document.getElementById('fSearch').value='';
+  ['fStatus','fPos','fEmp','fElig'].forEach(id=>document.getElementById(id).value='');
+  FILTERED=[...ALL]; pg=1; render();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('fSearch').addEventListener('input', applyF);
+});
+
+function render(){ kpis(); charts(); tableRender(); }
+
+function kpis(){
+  const d=FILTERED;
+  document.getElementById('k0').textContent = d.length;
+  document.getElementById('k1').textContent = d.filter(r=>r.stat==='Selected').length;
+  document.getElementById('k2').textContent = d.filter(r=>r.stat==='On Hold').length;
+  document.getElementById('k3').textContent = d.filter(r=>r.elig==='Yes').length;
+  const rev = d.reduce((s,r)=>s+(parseInt(r.rev)||0),0);
+  document.getElementById('k4').textContent = rev>0 ? '₹'+rev.toLocaleString('en-IN') : '₹0';
+}
+
+const SCOL={'Selected':'#1A8C4E','On Hold':'#C97D00','Rejected':'#C82828','Pending':'#2B5EC9'};
+const DCOL=['#FF6B00','#FF9640','#FFD0AD','#888','#ccc'];
+
+function charts(){
+  // Donut
+  const sm={};
+  FILTERED.forEach(r=>{ const k=r.stat||'—'; sm[k]=(sm[k]||0)+1; });
+  const ent=Object.entries(sm), tot=ent.reduce((s,[,v])=>s+v,0);
+  if(!tot){
+    document.getElementById('donut').innerHTML='';
+    document.getElementById('legend').innerHTML='<p style="color:var(--g400);font-size:12px;padding:10px">No data</p>';
+  } else {
+    const cx=60,cy=60,R=44,ri=26;
+    let ang=-Math.PI/2, svg='';
+    ent.forEach(([k,v],i)=>{
+      const a=(v/tot)*2*Math.PI, lg=a>Math.PI?1:0;
+      const col=SCOL[k]||DCOL[i%DCOL.length];
+      const x1=cx+R*Math.cos(ang),y1=cy+R*Math.sin(ang);
+      const x2=cx+R*Math.cos(ang+a),y2=cy+R*Math.sin(ang+a);
+      const xi1=cx+ri*Math.cos(ang),yi1=cy+ri*Math.sin(ang);
+      const xi2=cx+ri*Math.cos(ang+a),yi2=cy+ri*Math.sin(ang+a);
+      svg+=`<path d="M${xi1},${yi1}L${x1},${y1}A${R},${R} 0 ${lg} 1 ${x2},${y2}L${xi2},${yi2}A${ri},${ri} 0 ${lg} 0 ${xi1},${yi1}Z" fill="${col}"/>`;
+      ang+=a;
+    });
+    svg+=`<text x="60" y="64" text-anchor="middle" font-size="15" font-weight="800" font-family="Sora,sans-serif" fill="#1A1A1A">${tot}</text>`;
+    document.getElementById('donut').innerHTML=svg;
+    document.getElementById('legend').innerHTML=ent.map(([k,v],i)=>{
+      const col=SCOL[k]||DCOL[i%DCOL.length];
+      return `<div class="l-item">
+        <div class="l-dot" style="background:${col}"></div>
+        <span class="l-name">${k}</span>
+        <span class="l-cnt">${v}<span class="l-pct">(${Math.round(v/tot*100)}%)</span></span>
+      </div>`;
+    }).join('');
+  }
+
+  // Bar
+  const pm={};
+  FILTERED.forEach(r=>{ const k=r.pos||'Unknown'; pm[k]=(pm[k]||0)+1; });
+  const blist=Object.entries(pm).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const mx=blist[0]?.[1]||1;
+  document.getElementById('bars').innerHTML = !blist.length
+    ? '<p style="color:var(--g400);font-size:12px">No data</p>'
+    : blist.map(([k,v])=>{
+        const lbl=k.length>22?k.slice(0,20)+'…':k;
+        return `<div class="b-row">
+          <div class="b-lbl" title="${k}">${lbl}</div>
+          <div class="b-track"><div class="b-fill" style="width:${(v/mx)*100}%"><span>${v}</span></div></div>
+        </div>`;
+      }).join('');
+}
+
+function badge(s){
+  if(!s||!s.trim()) return `<span class="badge b-def"><span class="bd"></span>—</span>`;
+  const m={Selected:'b-sel','On Hold':'b-hld',Rejected:'b-rej',Pending:'b-pnd'};
+  const cls=m[s]||'b-def';
+  return `<span class="badge ${cls}"><span class="bd"></span>${s}</span>`;
+}
+
+function tableRender(){
+  const total=FILTERED.length;
+  const s=(pg-1)*PAGE_SZ, e=Math.min(s+PAGE_SZ,total);
+  const slice=FILTERED.slice(s,e);
+  document.getElementById('recBadge').textContent = total+' record'+(total!==1?'s':'');
+  document.getElementById('filterNote').textContent = total<ALL.length?`filtered from ${ALL.length}`:'';
+  document.getElementById('pgInfo').textContent = total?`Showing ${s+1}–${e} of ${total}`:'No records';
+
+  if(!slice.length){
+    document.getElementById('tbody').innerHTML=
+      `<tr><td colspan="12"><div class="sbox"><span class="emo">🔍</span><p>No records match your filters.</p></div></td></tr>`;
+    paginate(total); return;
+  }
+
+  document.getElementById('tbody').innerHTML=slice.map((r,i)=>{
+    const rev=parseInt(r.rev)||0;
+    const resCell=r.resume
+      ?`<a href="${r.resume}" target="_blank" class="res-link">📎 View</a>`
+      :`<span class="dash">—</span>`;
+    return `<tr>
+      <td class="mono">${s+i+1}</td>
+      <td class="mono">${r.ts.split(' ')[0]||'—'}</td>
+      <td class="nm">${r.emp||'—'}</td>
+      <td class="nm">${r.cand||'—'}</td>
+      <td>${r.ph||'<span class="dash">—</span>'}</td>
+      <td style="color:var(--orange);font-size:11px">${r.mail||'<span class="dash">—</span>'}</td>
+      <td style="font-weight:600">${r.pos||'—'}</td>
+      <td>${badge(r.stat)}</td>
+      <td>${r.elig==='Yes'?'<span class="ey">✓ Yes</span>':'<span class="en">No</span>'}</td>
+      <td class="mono">${r.jd||'—'}</td>
+      <td><span class="rev">${rev>0?'₹'+rev.toLocaleString('en-IN'):'—'}</span></td>
+      <td>${resCell}</td>
+    </tr>`;
+  }).join('');
+
+  paginate(total);
+}
+
+function paginate(total){
+  const tp=Math.ceil(total/PAGE_SZ), c=document.getElementById('pgBtns');
+  if(tp<=1){c.innerHTML='';return;}
+  let h=`<button class="pb" onclick="go(${pg-1})" ${pg===1?'disabled':''}>‹</button>`;
+  for(let p=1;p<=tp;p++){
+    if(p===1||p===tp||(p>=pg-1&&p<=pg+1))
+      h+=`<button class="pb ${p===pg?'on':''}" onclick="go(${p})">${p}</button>`;
+    else if(p===pg-2||p===pg+2)
+      h+=`<button class="pb" disabled style="cursor:default">…</button>`;
+  }
+  h+=`<button class="pb" onclick="go(${pg+1})" ${pg===tp?'disabled':''}>›</button>`;
+  c.innerHTML=h;
+}
+
+function go(p){
+  const tp=Math.ceil(FILTERED.length/PAGE_SZ);
+  if(p<1||p>tp) return;
+  pg=p; tableRender();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+loadData();
+</script>
+</body>
+</html>
